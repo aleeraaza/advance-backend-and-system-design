@@ -2,8 +2,8 @@ import express, { type Request, type Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { FRONTEND_URL } from "./config/config.js";
-import { globalErrorHandler } from "./middlewares/error.middleware.js";
 import authRouter from "./modules/auth/auth.route.js";
+import { globalErrorHandler } from "./middlewares/globalErrorHandler.js";
 
 export const app = express();
 
