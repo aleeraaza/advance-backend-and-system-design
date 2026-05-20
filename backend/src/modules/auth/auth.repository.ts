@@ -20,22 +20,21 @@ export const authRepository = {
     return user;
   },
 
-  createUser: async (
-    username: string,
-    email: string,
-    hashedPassword: string,
-  ) => {
-    const createdUser = await prisma.user.create({
+  createUser: async (data: {
+    username: string;
+    email: string;
+    hashedPassword: string;
+  }) => {
+    return await prisma.user.create({
       data: {
-        username,
-        email,
-        password: hashedPassword,
+        username: data.username,
+        email: data.email,
+        password: data.hashedPassword,
       },
     });
-    return createdUser;
   },
 
-  refreshToken: async (data: {
+  createRefreshToken: async (data: {
     token: string;
     userId: string;
     expiresAt: Date;
