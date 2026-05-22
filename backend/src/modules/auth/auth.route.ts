@@ -1,16 +1,27 @@
 import { Router } from "express";
 import { authController } from "./auth.controller.js";
 import { validate } from "../../middlewares/validate.middleware.js";
-import { loginUserSchema, registerUserSchema } from "./auth.schema.js";
+import {
+  loginUserSchema,
+  refreshtokenSchema,
+  registerUserSchema,
+} from "./auth.schema.js";
+import { verifyTokenHandler } from "../../middlewares/auth.middleware.js";
 
-const authRouter = Router();
+const router = Router();
 
-authRouter
+router
   .route("/register")
   .post(validate(registerUserSchema), authController.registerController);
 
-authRouter
+router
   .route("/login")
   .post(validate(loginUserSchema), authController.loginController);
 
-export default authRouter;
+router
+  .route("/refresh-token")
+  .post(validate(refreshtokenSchema), authController.refreshTokenController);
+
+router.route("/me").get(verifyTokenHandler, authController.userController);
+
+export default router;

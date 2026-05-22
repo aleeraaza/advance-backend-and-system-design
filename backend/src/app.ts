@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { FRONTEND_URL } from "./config/config.js";
 import authRouter from "./modules/auth/auth.route.js";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler.js";
+import { notFoundHandler } from "./middlewares/notFoundHandler.js";
 
 export const app = express();
 
@@ -23,5 +24,7 @@ app.get("/health-check", (req: Request, res: Response) => {
 });
 
 app.use("/api/v1/auth", authRouter);
+
+app.use(notFoundHandler);
 
 app.use(globalErrorHandler);

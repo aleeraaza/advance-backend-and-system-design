@@ -11,5 +11,12 @@ export const loginUserSchema = z.object({
   password: z.string().min(6, "Password must be 6 characters long"),
 });
 
+export const refreshtokenSchema = z
+  .object({
+    token: z.string(),
+  })
+  .strict();
+
 export type LoginUserDTO = z.infer<typeof loginUserSchema>;
 export type RegisterUserDTO = z.infer<typeof registerUserSchema>;
+export type RefreshTokenDTO = z.infer<typeof refreshtokenSchema>;

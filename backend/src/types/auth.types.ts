@@ -5,3 +5,7 @@ export interface UserResponseType {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface IJWTPayload {
+  userId: string;
+}
