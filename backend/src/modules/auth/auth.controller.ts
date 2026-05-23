@@ -1,12 +1,14 @@
 import type { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync.js";
-import { authService } from "./auth.service.js";
+import { authService } from "./auth.container.js";
 import { sendResponse } from "../../utils/sendResponse.js";
 import { IJWTPayload } from "../../types/auth.types.js";
+import { destroyCookies, setCookies } from "../../utils/auth.helper.js";
 
 export const authController = {
   registerController: catchAsync(async (req: Request, res: Response) => {
     const result = await authService.registerUserService(req.body);
+    setCookies(res, result.accessToken, result.refreshToken);
     return sendResponse(res, 201, {
       success: true,
       message: "Account Created Successfully",
@@ -16,6 +18,7 @@ export const authController = {
 
   loginController: catchAsync(async (req: Request, res: Response) => {
     const result = await authService.loginUserService(req.body);
+    setCookies(res, result.accessToken, result.refreshToken);
     return sendResponse(res, 200, {
       success: true,
       message: "User Logged In Successfully",
@@ -24,7 +27,10 @@ export const authController = {
   }),
 
   refreshTokenController: catchAsync(async (req: Request, res: Response) => {
-    const result = await authService.refreshTokenService(req.body);
+    const result = await authService.refreshTokenService(
+      req.cookies.refreshToken,
+    );
+    setCookies(res, result.accessToken, result.refreshToken);
     return sendResponse(res, 200, {
       success: true,
       message: "Token refreshed Successfully!",
@@ -45,7 +51,8 @@ export const authController = {
   }),
 
   logoutController: catchAsync(async (req: Request, res: Response) => {
-    const result = await authService.logoutService(req.body);
+    await authService.logoutService(req.cookies.refreshToken);
+    destroyCookies(res);
     return sendResponse(res, 200, {
       success: true,
       message: "User Logged out successfully",
@@ -53,9 +60,8 @@ export const authController = {
   }),
 
   logoutAllController: catchAsync(async (req: Request, res: Response) => {
-    const result = await authService.logoutAllService(
-      req.user?.userId as string,
-    );
+    await authService.logoutAllService(req.user?.userId as string);
+    destroyCookies(res);
     return sendResponse(res, 200, {
       success: true,
       message: "User Logged Out from All Devices Successfully!",

@@ -1,3 +1,4 @@
+import { IAuthRepository } from "../../types/auth.interface.js";
 import { IJWTPayload } from "../../types/auth.types.js";
 import { AppError } from "../../utils/AppError.js";
 import { hashPassword, hashRefreshToken } from "../../utils/auth.helper.js";
@@ -8,24 +9,26 @@ import {
   verifyRefreshToken,
 } from "../../utils/jwt.helper.js";
 import { toUserResponse } from "./auth.mapper.js";
-import { authRepository } from "./auth.repository.js";
 import type {
   LoginUserDTO,
   RefreshTokenDTO,
   RegisterUserDTO,
 } from "./auth.schema.js";
 
-export const authService = {
-  registerUserService: async (body: RegisterUserDTO) => {
+export class AuthService {
+  constructor(private authRepository: IAuthRepository) {}
+
+  async registerUserService(body: RegisterUserDTO) {
     const { email, password, username } = body;
 
     const existingUserByUsername =
-      await authRepository.findUserByUsername(username);
+      await this.authRepository.findUserByUsername(username);
 
     if (existingUserByUsername) {
       throw new AppError("User already exists", 400);
     }
-    const existingUserByEmail = await authRepository.findUserByEmail(email);
+    const existingUserByEmail =
+      await this.authRepository.findUserByEmail(email);
 
     if (existingUserByEmail) {
       throw new AppError("User already exists", 400);
@@ -33,7 +36,7 @@ export const authService = {
 
     const hashedPassword = await hashPassword(password);
 
-    const newUser = await authRepository.createUser({
+    const newUser = await this.authRepository.createUser({
       username,
       email,
       hashedPassword,
@@ -44,7 +47,7 @@ export const authService = {
 
     const hashedToken = hashRefreshToken(refreshToken);
 
-    await authRepository.createRefreshToken({
+    await this.authRepository.createRefreshToken({
       token: hashedToken,
       userId: newUser.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -55,11 +58,11 @@ export const authService = {
       accessToken,
       refreshToken,
     };
-  },
+  }
 
-  loginUserService: async (body: LoginUserDTO) => {
+  async loginUserService(body: LoginUserDTO) {
     const { email, password } = body;
-    const user = await authRepository.findUserByEmail(email);
+    const user = await this.authRepository.findUserByEmail(email);
     if (!user) {
       throw new AppError("No User exists with this email!", 404);
     }
@@ -78,7 +81,7 @@ export const authService = {
 
     const hashedToken = hashRefreshToken(refreshToken);
 
-    await authRepository.createRefreshToken({
+    await this.authRepository.createRefreshToken({
       token: hashedToken,
       userId: user.id,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -89,10 +92,9 @@ export const authService = {
       accessToken,
       refreshToken,
     };
-  },
+  }
 
-  refreshTokenService: async (body: RefreshTokenDTO) => {
-    const { token } = body;
+  async refreshTokenService(token: string) {
     if (!token) {
       throw new AppError("Refersh token is required", 401);
     }
@@ -104,19 +106,19 @@ export const authService = {
     }
 
     const hashToken = hashRefreshToken(token);
-    const existingToken = await authRepository.findRefreshToken(hashToken);
+    const existingToken = await this.authRepository.findRefreshToken(hashToken);
     if (!existingToken) {
       throw new AppError("Refresh token not found!", 404);
     }
 
-    await authRepository.deleteRefreshToken(existingToken.id);
+    await this.authRepository.deleteRefreshToken(existingToken.id);
 
     const newAccessToken = generateAccessToken({ userId: decoded.userId });
     const newRefreshToken = generateRefreshToken({ userId: decoded.userId });
 
     const newRefreshTokenHash = hashRefreshToken(newRefreshToken);
 
-    await authRepository.createRefreshToken({
+    await this.authRepository.createRefreshToken({
       token: newRefreshTokenHash,
       userId: decoded.userId,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -126,19 +128,18 @@ export const authService = {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     };
-  },
+  }
 
-  getCurrentUserService: async (body: IJWTPayload) => {
+  async getCurrentUserService(body: IJWTPayload) {
     const { userId } = body;
-    const user = await authRepository.getCurrentUser(userId);
+    const user = await this.authRepository.getCurrentUser(userId);
 
     return {
       user,
     };
-  },
+  }
 
-  logoutService: async (body: RefreshTokenDTO) => {
-    const { token } = body;
+  async logoutService(token: string) {
     if (!token) {
       throw new AppError("Refresh Token is required", 401);
     }
@@ -146,23 +147,23 @@ export const authService = {
     const hashedRefreshToken = hashRefreshToken(token);
 
     const existingToken =
-      await authRepository.findRefreshToken(hashedRefreshToken);
+      await this.authRepository.findRefreshToken(hashedRefreshToken);
     if (!existingToken) {
       throw new AppError("Token not Found!", 404);
     }
 
-    await authRepository.deleteRefreshToken(existingToken.id);
+    await this.authRepository.deleteRefreshToken(existingToken.id);
 
     return true;
-  },
+  }
 
-  logoutAllService: async (userId: string) => {
+  async logoutAllService(userId: string) {
     if (!userId) {
       throw new AppError("UserId is required", 401);
     }
 
-    await authRepository.deleteAllRefreshTokensByUserId(userId);
+    await this.authRepository.deleteAllRefreshTokensByUserId(userId);
 
     return true;
-  },
-};
+  }
+}
