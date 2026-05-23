@@ -136,4 +136,33 @@ export const authService = {
       user,
     };
   },
+
+  logoutService: async (body: RefreshTokenDTO) => {
+    const { token } = body;
+    if (!token) {
+      throw new AppError("Refresh Token is required", 401);
+    }
+
+    const hashedRefreshToken = hashRefreshToken(token);
+
+    const existingToken =
+      await authRepository.findRefreshToken(hashedRefreshToken);
+    if (!existingToken) {
+      throw new AppError("Token not Found!", 404);
+    }
+
+    await authRepository.deleteRefreshToken(existingToken.id);
+
+    return true;
+  },
+
+  logoutAllService: async (userId: string) => {
+    if (!userId) {
+      throw new AppError("UserId is required", 401);
+    }
+
+    await authRepository.deleteAllRefreshTokensByUserId(userId);
+
+    return true;
+  },
 };

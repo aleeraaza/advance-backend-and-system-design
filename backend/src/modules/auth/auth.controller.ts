@@ -43,4 +43,22 @@ export const authController = {
       data: result,
     });
   }),
+
+  logoutController: catchAsync(async (req: Request, res: Response) => {
+    const result = await authService.logoutService(req.body);
+    return sendResponse(res, 200, {
+      success: true,
+      message: "User Logged out successfully",
+    });
+  }),
+
+  logoutAllController: catchAsync(async (req: Request, res: Response) => {
+    const result = await authService.logoutAllService(
+      req.user?.userId as string,
+    );
+    return sendResponse(res, 200, {
+      success: true,
+      message: "User Logged Out from All Devices Successfully!",
+    });
+  }),
 };

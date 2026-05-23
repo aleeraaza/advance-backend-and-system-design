@@ -60,6 +60,14 @@ export const authRepository = {
     });
   },
 
+  deleteAllRefreshTokensByUserId: async (userId: string) => {
+    return await prisma.refreshToken.deleteMany({
+      where: {
+        userId,
+      },
+    });
+  },
+
   getCurrentUser: async (userId: string) => {
     return await prisma.user.findUnique({
       where: { id: userId },

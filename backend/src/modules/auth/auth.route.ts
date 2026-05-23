@@ -24,4 +24,12 @@ router
 
 router.route("/me").get(verifyTokenHandler, authController.userController);
 
+router
+  .route("/logout")
+  .post(verifyTokenHandler, authController.logoutController);
+
+router
+  .route("/logout-all")
+  .post(verifyTokenHandler, authController.logoutAllController);
+
 export default router;
